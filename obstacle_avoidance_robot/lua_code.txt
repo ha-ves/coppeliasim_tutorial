@@ -1,0 +1,47 @@
+function sysCall_init()
+    -- do some initialization here
+    RobotBase=sim.getObjectAssociatedWithScript(sim.handle_self)
+    leftMotor=sim.getObjectHandle("motor_kiri")
+    rightMotor=sim.getObjectHandle("motor_kanan")
+    noseSensor=sim.getObjectHandle("front_prox")
+    minMaxSpeed={50*math.pi/180,300*math.pi/180}
+    backUntilTime=-1
+    
+    xml = '<ui title="'..sim.getObjectName(RobotBase)..'speed" closeable="false" resizable="false" activate="false">'..[[
+        <hslider minimum="0" maximum="100" on-change="speedChange_callback" id="1"/>
+        <label text="" style="* {margin-left: 300px;}"/>
+        </ui>
+    ]]
+    ui=simUI.create(xml)
+    speed=(minMaxSpeed[1]+minMaxSpeed[2])*0.3
+    simUI.setSliderValue(ui,1,100*(speed-minMaxSpeed[1])/(minMaxSpeed[2]-minMaxSpeed[1]))
+end
+
+function speedChange_callback(ui,id,newVal)
+    speed=minMaxSpeed[1]+(minMaxSpeed[2]-minMaxSpeed[1])*newVal/100
+end
+
+function sysCall_actuation()
+    -- put your actuation code here
+    result=sim.readProximitySensor(noseSensor)
+    if(result>0) then backUntilTime=sim.getSimulationTime()+4 end
+    
+    if(backUntilTime<sim.getSimulationTime()) then
+        sim.setJointTargetVelocity(leftMotor,-speed)
+        sim.setJointTargetVelocity(rightMotor,-speed)
+    else
+        sim.setJointTargetVelocity(leftMotor,speed/5)
+        sim.setJointTargetVelocity(rightMotor,speed/7)
+    end
+end
+
+function sysCall_sensing()
+    -- put your sensing code here
+end
+
+function sysCall_cleanup()
+    -- do some clean-up here
+    simUI.destroy(ui)
+end
+
+-- See the user manual or the available code snippets for additional callback functions and details
